@@ -1,0 +1,109 @@
+# ==============================================================================
+# FARIS - Docker Compose Configuration
+# ==============================================================================
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # FARIS Backend API
+  # ---------------------------------------------------------------------------
+  faris-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: faris-api
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=FARIS
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - DATABASE_URL=sqlite+aiosqlite:///./data/faris.db
+      - CHROMA_PERSIST_DIRECTORY=/app/chroma_db
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=llama3.1:8b
+    volumes:
+      - faris-data:/app/data
+      - faris-chroma:/app/chroma_db
+      - faris-logs:/app/logs
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - faris-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ---------------------------------------------------------------------------
+  # Ollama LLM Service
+  # ---------------------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    container_name: faris-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    networks:
+      - faris-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL (Production Database)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: faris-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=faris
+      - POSTGRES_PASSWORD=faris_secure_password
+      - POSTGRES_DB=faris
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - faris-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U faris"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - production
+
+# ---------------------------------------------------------------------------
+# Networks
+# ---------------------------------------------------------------------------
+networks:
+  faris-network:
+    driver: bridge
+
+# ---------------------------------------------------------------------------
+# Volumes
+# ---------------------------------------------------------------------------
+volumes:
+  faris-data:
+  faris-chroma:
+  faris-logs:
+  ollama-models:
+  postgres-data:
