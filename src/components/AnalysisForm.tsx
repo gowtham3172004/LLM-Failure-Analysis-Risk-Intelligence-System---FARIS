@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 import { Play, Loader2 } from "lucide-react";
 
 export default function AnalysisForm() {
