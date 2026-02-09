@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 import { Check, X, Minus } from "lucide-react";
 
 interface Claim {
