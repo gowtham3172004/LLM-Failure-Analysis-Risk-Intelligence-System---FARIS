@@ -98,7 +98,10 @@ FARIS uses LangGraph for orchestrated, parallel execution:
 ### Prerequisites
 
 - Python 3.10+
-- [Ollama](https://ollama.ai/) with LLaMA 3.1:8b model
+- One LLM backend:
+  - [Ollama](https://ollama.ai/) with LLaMA 3.1:8b model, or
+  - Gemini API key, or
+  - Groq API key
 - Docker (optional, for containerized deployment)
 
 ### Installation
@@ -120,11 +123,21 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. **Set up Ollama**
+4. **Set up an LLM provider**
+
+Option A - Ollama (local):
 ```bash
 # Install Ollama from https://ollama.ai/
 ollama pull llama3.1:8b
 ollama serve  # Start the Ollama server
+```
+
+Option B - Gemini or Groq (cloud):
+```bash
+# Set in .env
+# LLM_PROVIDER=gemini and GEMINI_API_KEY=...
+# or
+# LLM_PROVIDER=groq and GROQ_API_KEY=...
 ```
 
 5. **Configure environment**
